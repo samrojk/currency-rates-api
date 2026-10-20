@@ -1,5 +1,7 @@
 fastapi
 uvicorn[standard]
 requests
+
+# for testing
 pytest
 httpx

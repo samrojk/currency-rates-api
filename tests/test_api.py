@@ -15,7 +15,6 @@ def fake_rates():
         },
     }
 
-
 def setup_function():
     main._cached_data = None
     main._cache_expires_at = 0.0
@@ -35,7 +34,6 @@ def test_rates(monkeypatch):
     assert response.json()["base"] == "USD"
     assert response.json()["rates"]["USD"] == 1.0
 
-
 def test_convert_usd_to_inr(monkeypatch):
     monkeypatch.setattr(main, "fetch_rates", fake_rates)
 
@@ -51,7 +49,6 @@ def test_convert_usd_to_inr(monkeypatch):
     assert response.status_code == 200
     assert response.json()["converted_amount"] == 900.0
 
-
 def test_invalid_currency(monkeypatch):
     monkeypatch.setattr(main, "fetch_rates", fake_rates)
 
@@ -64,7 +61,6 @@ def test_invalid_currency(monkeypatch):
     )
 
     assert response.status_code == 400
-
 
 def test_invalid_amount():
     response = client.get(

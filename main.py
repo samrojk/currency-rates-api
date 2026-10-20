@@ -133,7 +133,7 @@ def convert_currency(
         "source": data["source"],
     }
 
-
+# get request for home page
 @app.get("/")
 def home():
     return {
