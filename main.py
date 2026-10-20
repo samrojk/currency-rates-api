@@ -56,6 +56,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
+@app.get("/api/rates")
+def get_exchange_rates():
+    return fetch_rates()
+
 @app.get("/")
 def home():
     return {
