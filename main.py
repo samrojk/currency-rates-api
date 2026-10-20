@@ -32,11 +32,19 @@ def fetch_rates():
     if not rate_date or "USD" not in rates:
         raise ValueError("Invalid or incomplete ECB response")
 
+    # Convert EUR-based rates to USD-based rates.
+    eur_to_usd = rates["USD"]
+
+    usd_rates = {
+        currency: round(rate / eur_to_usd, 6)
+        for currency, rate in rates.items()
+    }
+
     return {
         "source": "European Central Bank",
         "date": rate_date,
-        "base": "EUR",
-        "rates": rates,
+        "base": "USD",
+        "rates": usd_rates,
     }
 
 if __name__ == "__main__":
