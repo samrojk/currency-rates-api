@@ -1,3 +1,5 @@
+from fastapi import FastAPI
+
 import requests
 import xml.etree.ElementTree as ET
 
@@ -47,5 +49,16 @@ def fetch_rates():
         "rates": usd_rates,
     }
 
-if __name__ == "__main__":
-    print(fetch_rates())
+
+app = FastAPI(
+    title="Currency Rates API",
+    description="USD-based reference rates from the European Central Bank.",
+    version="1.0.0",
+)
+
+@app.get("/")
+def home():
+    return {
+        "message": "Currency Rates API",
+        "docs": "/docs",
+    }
