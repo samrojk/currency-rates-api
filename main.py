@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 
+import time
 import requests
 import xml.etree.ElementTree as ET
 
@@ -7,6 +8,11 @@ ECB_URL = (
     "https://www.ecb.europa.eu/stats/"
     "eurofxref/eurofxref-daily.xml"
 )
+
+CACHE_SECONDS = 8 * 60 * 60  # 8 hours
+
+_cached_data = None
+_cache_expires_at = 0.0
 
 def fetch_rates():
     """Fetch the latest available reference rates from the ECB."""
@@ -50,6 +56,35 @@ def fetch_rates():
     }
 
 
+def get_rates():
+    """Return cached rates or fetch fresh data when the cache expires."""
+    global _cached_data, _cache_expires_at
+
+    now = time.monotonic()
+
+    if _cached_data is not None and now < _cache_expires_at:
+        return _cached_data
+
+    try:
+        data = fetch_rates()
+    except (
+        requests.RequestException,
+        ET.ParseError,
+        ValueError,
+    ) as exc:
+        # If fetching fails, serve the last successful data if available.
+        if _cached_data is not None:
+            return _cached_data
+
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to retrieve exchange rates from the ECB.",
+        ) from exc
+
+    _cached_data = data
+    _cache_expires_at = now + CACHE_SECONDS
+    return _cached_data
+
 app = FastAPI(
     title="Currency Rates API",
     description="USD-based reference rates from the European Central Bank.",
@@ -59,7 +94,7 @@ app = FastAPI(
 
 @app.get("/api/rates")
 def get_exchange_rates():
-    return fetch_rates()
+    return get_rates()
 
 
 @app.get("/api/convert")
@@ -68,7 +103,7 @@ def convert_currency(
     to_currency: str = Query(default="INR", min_length=3, max_length=3),
     amount: float = Query(default=1.0, gt=0),
 ):
-    data = fetch_rates()
+    data = get_rates()
     rates = data["rates"]
 
     source = from_currency.upper()
